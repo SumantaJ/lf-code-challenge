@@ -1,20 +1,21 @@
 package com.labforward.api.core.validation;
 
+import static com.labforward.api.constants.Constants.MESSAGE_NO_ID_MATCH;
+
 import com.google.common.base.Preconditions;
 import com.labforward.api.core.exception.EntityValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 
 public class EntityValidator {
 
-	public static final String MESSAGE_NO_ID_MATCH = "id provided does not match resource";
-
 	private SpringValidatorAdapter validatorAdapter;
 
 	@Autowired
-	public EntityValidator(SpringValidatorAdapter validatorAdapter) {
+	public EntityValidator(@Qualifier("springValidatorAdapter") SpringValidatorAdapter validatorAdapter){
 		this.validatorAdapter = validatorAdapter;
 	}
 

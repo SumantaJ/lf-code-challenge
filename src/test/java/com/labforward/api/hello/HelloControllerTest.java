@@ -1,9 +1,18 @@
 package com.labforward.api.hello;
 
-import com.labforward.api.common.MVCIntegrationTest;
-import com.labforward.api.core.GlobalControllerAdvice;
-import com.labforward.api.hello.domain.Greeting;
-import com.labforward.api.hello.service.HelloWorldService;
+import static com.labforward.api.constants.Constants.DEFAULT_ID;
+import static com.labforward.api.constants.Constants.DEFAULT_MESSAGE;
+import static com.labforward.api.constants.Constants.GREETING_NOT_FOUND;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -12,15 +21,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MvcResult;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.labforward.api.common.MVCIntegrationTest;
+import com.labforward.api.hello.domain.Greeting;
+
 
 @AutoConfigureMockMvc
 @RunWith(SpringRunner.class)
@@ -33,8 +39,16 @@ public class HelloControllerTest extends MVCIntegrationTest {
 	public void getHelloIsOKAndReturnsValidJSON() throws Exception {
 		mockMvc.perform(get("/hello"))
 		       .andExpect(status().isOk())
-		       .andExpect(jsonPath("$.id", is(HelloWorldService.DEFAULT_ID)))
-		       .andExpect(jsonPath("$.message", is(HelloWorldService.DEFAULT_MESSAGE)));
+		       .andExpect(jsonPath("$.id", is(DEFAULT_ID)))
+		       .andExpect(jsonPath("$.message", is(DEFAULT_MESSAGE)));
+	}
+	
+	@Test
+	public void getHelloWithNullIdReturnEmpty() throws Exception {
+		String invalidId = "invalidId";
+		mockMvc.perform(get("/hello/"+ invalidId))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message", containsString(GREETING_NOT_FOUND)));
 	}
 
 	@Test
@@ -51,8 +65,9 @@ public class HelloControllerTest extends MVCIntegrationTest {
 	public void returnsBadRequestWhenUnexpectedAttributeProvided() throws Exception {
 		String body = "{ \"tacos\":\"value\" }}";
 		mockMvc.perform(post("/hello").content(body).contentType(MediaType.APPLICATION_JSON))
-		       .andExpect(status().isBadRequest())
-		       .andExpect(jsonPath("$.message", containsString(GlobalControllerAdvice.MESSAGE_UNRECOGNIZED_PROPERTY)));
+		       .andExpect(status().isUnprocessableEntity())
+		       .andExpect(jsonPath("$.validationErrors", hasSize(1)))
+		       .andExpect(jsonPath("$.validationErrors[*].field", contains("message")));
 	}
 
 	@Test
@@ -76,6 +91,42 @@ public class HelloControllerTest extends MVCIntegrationTest {
 		                              .content(body))
 		       .andExpect(status().isOk())
 		       .andExpect(jsonPath("$.message", is(hello.getMessage())));
+	}
+	
+	@Test
+	public void updateOKWhenRequiredGreetingProvided() throws Exception {
+		final ObjectMapper objectMapper = new ObjectMapper();
+		final String updatedMessage = "Updated Message";
+		
+		Greeting hello = new Greeting(HELLO_LUKE);
+		final String body = getGreetingBody(hello);
+
+		MvcResult result = mockMvc.perform(post("/hello").contentType(MediaType.APPLICATION_JSON)
+		                              .content(body))
+		       .andExpect(status().isOk())
+		       .andReturn();
+		
+		String content = result.getResponse().getContentAsString();
+		Greeting savedGreeting = objectMapper.readValue(content, Greeting.class);
+		
+		savedGreeting.setMessage(updatedMessage);
+		final String updatedRequestBody = getGreetingBody(savedGreeting);
+		
+		mockMvc.perform(put("/hello").contentType(MediaType.APPLICATION_JSON)
+                .content(updatedRequestBody))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.message", is(updatedMessage)));
+	}
+	
+	@Test
+	public void updateGreetingReturnsEmptyWhenIdInvalid() throws Exception {
+		Greeting hello = new Greeting("InvalidId", HELLO_LUKE);
+		final String body = getGreetingBody(hello);
+		
+		mockMvc.perform(put("/hello").contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message", containsString(GREETING_NOT_FOUND)));
 	}
 
 	private String getGreetingBody(Greeting greeting) throws JSONException {

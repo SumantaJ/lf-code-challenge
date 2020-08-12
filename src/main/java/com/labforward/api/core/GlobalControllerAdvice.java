@@ -1,18 +1,13 @@
 package com.labforward.api.core;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import com.google.common.base.Throwables;
-import com.labforward.api.core.creation.EntityCreatedResponse;
-import com.labforward.api.core.deletion.NoContentResponse;
-import com.labforward.api.core.domain.ApiMessage;
-import com.labforward.api.core.domain.ValidationErrorMessage;
-import com.labforward.api.core.exception.BadRequestException;
-import com.labforward.api.core.exception.EntityValidationException;
-import com.labforward.api.core.exception.ResourceNotAccessibleException;
-import com.labforward.api.core.exception.ResourceNotFoundException;
-import com.labforward.api.core.exception.ServiceUnavailableException;
-import com.labforward.api.core.exception.UnsupportedMediaTypeException;
-import com.labforward.api.core.exception.UserAgentRequiredException;
+import static com.labforward.api.constants.Constants.MESSAGE_UNRECOGNIZED_PROPERTY;
+import static com.labforward.api.core.validation.BeanValidationUtils.OBJECT_ERROR_DELIMITER;
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.CacheControl;
@@ -36,11 +31,19 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-import java.util.UUID;
-
-import static com.labforward.api.core.validation.BeanValidationUtils.OBJECT_ERROR_DELIMITER;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import com.google.common.base.Throwables;
+import com.labforward.api.core.creation.EntityCreatedResponse;
+import com.labforward.api.core.deletion.NoContentResponse;
+import com.labforward.api.core.domain.ApiMessage;
+import com.labforward.api.core.domain.ValidationErrorMessage;
+import com.labforward.api.core.exception.BadRequestException;
+import com.labforward.api.core.exception.EntityValidationException;
+import com.labforward.api.core.exception.ResourceNotAccessibleException;
+import com.labforward.api.core.exception.ResourceNotFoundException;
+import com.labforward.api.core.exception.ServiceUnavailableException;
+import com.labforward.api.core.exception.UnsupportedMediaTypeException;
+import com.labforward.api.core.exception.UserAgentRequiredException;
 
 /**
  * Global exception handler
@@ -51,14 +54,9 @@ import static com.labforward.api.core.validation.BeanValidationUtils.OBJECT_ERRO
 @ControllerAdvice
 public class GlobalControllerAdvice extends ResponseEntityExceptionHandler implements ResponseBodyAdvice<Object> {
 
-	public static final String MESSAGE_UNRECOGNIZED_PROPERTY = "Unrecognized property: ";
-
 	private static final String MESSAGE_BAD_REQUEST = "Client error: server will not process request";
 
 	private static final ApiMessage GENERIC_NOT_FOUND_MESSAGE = new ApiMessage("Entity not found.");
-
-	public GlobalControllerAdvice() {
-	}
 
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(UserAgentRequiredException.class)
