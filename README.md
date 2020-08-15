@@ -45,16 +45,16 @@ Good Luck!
 
 ## UI Design
 
-Interactive angular based UI application has been added inside same project (just to make testing and viewing both app less problematic). UI app location is : <project root>/src/main/greeting-ui. 
+Interactive angular based UI application has been added inside same project (just to make testing and viewing both app less problematic). UI app location is : (project root)/src/main/greeting-ui. 
 
 Please note, both main project code and deployable app is there to check, inside greeting-ui and /greeting-ui/dist respectively.
 
-###Requirement for running UI
+### Requirement for running UI
 - Spring Boot Backend Application of Greeting CRUD
 - Node JS
-- Angular CLI (preferably version 9 or more)
+- Angular CLI (preferably version 10 or more)
 
-####Steps to run for running UI app
+#### Steps to run for running UI app
 
 1. Node JS source code or installer can be found [here](https://nodejs.org/en/download/)
 
