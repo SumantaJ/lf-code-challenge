@@ -2,11 +2,16 @@ package com.labforward.api.core.exception;
 
 import org.springframework.validation.BindingResult;
 
-public class EntityValidationException extends RuntimeException {
+public class EntityValidationException extends RuntimeException{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	public static String MESSAGE = "Bad Request";
-
-	private BindingResult bindingResult;
+	
+	private final BindingResult bindingResult;
 
 	public EntityValidationException(BindingResult bindingResult) {
 		super(MESSAGE);

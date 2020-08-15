@@ -1,0 +1,31 @@
+*
+{
+    margin:0;padding:0;
+}
+
+h1 { font-size: 500%; }
+.container
+{
+    width: 100vw; 
+    height: 56.25vw; /* 100/56.25 = 1.778 */
+    background: rgb(206, 172, 178);
+    max-height: 100vh;
+    max-width: 177.78vh; /* 16/9 = 1.778 */
+    margin: auto;
+    position: absolute;
+    top:0;bottom:0; /* vertical center */
+    left:0;right:0; /* horizontal center */
+}
+
+.form {
+    text-align: center;
+}
+
+.button {
+    position: absolute;
+    top: 50%;
+}
+
+.error {
+    color: red;
+  }

@@ -12,8 +12,9 @@ public class Constants {
 	
 	// Validation messages
 	public static final String MESSAGE_NO_ID_MATCH = "id provided does not match resource";
+	public static final String MESSAGE_INVALID_ID = "id provided is not valid";
 	
 	// Global config related
 	public static final String MESSAGE_UNRECOGNIZED_PROPERTY = "Unrecognized property: ";
-
+	
 }

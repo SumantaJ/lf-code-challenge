@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -44,30 +46,42 @@ public class HelloControllerTest extends MVCIntegrationTest {
 	}
 	
 	@Test
-	public void getHelloWithNullIdReturnEmpty() throws Exception {
-		String invalidId = "invalidId";
-		mockMvc.perform(get("/hello/"+ invalidId))
+	public void getHelloWithRandomIdReturnsNotFound() throws Exception{
+		UUID randomId = UUID.randomUUID();
+		mockMvc.perform(get("/hello/"+ randomId))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message", containsString(GREETING_NOT_FOUND)));
+	}
+	
+	@Test
+	public void getHelloWithInvalidIdReturnsBadRequest() throws Exception {
+		String invalidId = "76895UU";
+		mockMvc.perform(get("/hello/"+ invalidId))
+		       .andExpect(status().isUnprocessableEntity())
+		       .andExpect(jsonPath("$.validationErrors", hasSize(1)))
+		       .andExpect(jsonPath("$.validationErrors[*].field", contains("id")));
 	}
 
 	@Test
 	public void returnsBadRequestWhenMessageMissing() throws Exception {
 		String body = "{}";
-		mockMvc.perform(post("/hello").content(body)
-		                              .contentType(MediaType.APPLICATION_JSON))
-		       .andExpect(status().isUnprocessableEntity())
-		       .andExpect(jsonPath("$.validationErrors", hasSize(1)))
-		       .andExpect(jsonPath("$.validationErrors[*].field", contains("message")));
+		mockMvc.perform(post("/hello")
+				.content(body)
+		        .contentType(MediaType.APPLICATION_JSON))
+		       	.andExpect(status().isUnprocessableEntity())
+		       	.andExpect(jsonPath("$.validationErrors", hasSize(1)))
+		       	.andExpect(jsonPath("$.validationErrors[*].field", contains("message")));
 	}
 
 	@Test
 	public void returnsBadRequestWhenUnexpectedAttributeProvided() throws Exception {
 		String body = "{ \"tacos\":\"value\" }}";
-		mockMvc.perform(post("/hello").content(body).contentType(MediaType.APPLICATION_JSON))
-		       .andExpect(status().isUnprocessableEntity())
-		       .andExpect(jsonPath("$.validationErrors", hasSize(1)))
-		       .andExpect(jsonPath("$.validationErrors[*].field", contains("message")));
+		mockMvc.perform(post("/hello")
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+		       	.andExpect(status().isUnprocessableEntity())
+		       	.andExpect(jsonPath("$.validationErrors", hasSize(1)))
+		       	.andExpect(jsonPath("$.validationErrors[*].field", contains("message")));
 	}
 
 	@Test
@@ -75,11 +89,12 @@ public class HelloControllerTest extends MVCIntegrationTest {
 		Greeting emptyMessage = new Greeting("");
 		final String body = getGreetingBody(emptyMessage);
 
-		mockMvc.perform(post("/hello").content(body)
-		                              .contentType(MediaType.APPLICATION_JSON))
-		       .andExpect(status().isUnprocessableEntity())
-		       .andExpect(jsonPath("$.validationErrors", hasSize(1)))
-		       .andExpect(jsonPath("$.validationErrors[*].field", contains("message")));
+		mockMvc.perform(post("/hello")
+				.content(body)
+		        .contentType(MediaType.APPLICATION_JSON))
+		       	.andExpect(status().isUnprocessableEntity())
+		       	.andExpect(jsonPath("$.validationErrors", hasSize(1)))
+		       	.andExpect(jsonPath("$.validationErrors[*].field", contains("message")));
 	}
 
 	@Test
@@ -87,10 +102,11 @@ public class HelloControllerTest extends MVCIntegrationTest {
 		Greeting hello = new Greeting(HELLO_LUKE);
 		final String body = getGreetingBody(hello);
 
-		mockMvc.perform(post("/hello").contentType(MediaType.APPLICATION_JSON)
-		                              .content(body))
-		       .andExpect(status().isOk())
-		       .andExpect(jsonPath("$.message", is(hello.getMessage())));
+		mockMvc.perform(post("/hello")
+				.contentType(MediaType.APPLICATION_JSON)
+		        .content(body))
+		       	.andExpect(status().isOk())
+		       	.andExpect(jsonPath("$.message", is(hello.getMessage())));
 	}
 	
 	@Test
@@ -101,10 +117,11 @@ public class HelloControllerTest extends MVCIntegrationTest {
 		Greeting hello = new Greeting(HELLO_LUKE);
 		final String body = getGreetingBody(hello);
 
-		MvcResult result = mockMvc.perform(post("/hello").contentType(MediaType.APPLICATION_JSON)
-		                              .content(body))
-		       .andExpect(status().isOk())
-		       .andReturn();
+		MvcResult result = mockMvc.perform(post("/hello")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
+				.andExpect(status().isOk())
+				.andReturn();
 		
 		String content = result.getResponse().getContentAsString();
 		Greeting savedGreeting = objectMapper.readValue(content, Greeting.class);
@@ -112,21 +129,60 @@ public class HelloControllerTest extends MVCIntegrationTest {
 		savedGreeting.setMessage(updatedMessage);
 		final String updatedRequestBody = getGreetingBody(savedGreeting);
 		
-		mockMvc.perform(put("/hello").contentType(MediaType.APPLICATION_JSON)
+		mockMvc.perform(put("/hello")
+				.contentType(MediaType.APPLICATION_JSON)
                 .content(updatedRequestBody))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.message", is(updatedMessage)));
 	}
 	
 	@Test
-	public void updateGreetingReturnsEmptyWhenIdInvalid() throws Exception {
-		Greeting hello = new Greeting("InvalidId", HELLO_LUKE);
+	public void updateGreetingReturnsBadRequestWhenIdInvalid() throws Exception {
+		Greeting hello = new Greeting("invalidId", HELLO_LUKE);
 		final String body = getGreetingBody(hello);
+
+		mockMvc.perform(put("/hello")
+				.contentType(MediaType.APPLICATION_JSON).content(body))
+				.andExpect(status().isUnprocessableEntity())
+				.andExpect(jsonPath("$.validationErrors", hasSize(1)))
+				.andExpect(jsonPath("$.validationErrors[*].field", contains("id")));
+	}
+	
+	@Test
+	public void UpdateReturnsBadRequestWhenIdAndMessageMissing() throws Exception {
+		String body = "{}";
+		mockMvc.perform(put("/hello/")
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+		       	.andExpect(status().isUnprocessableEntity())
+		       	.andExpect(jsonPath("$.validationErrors", hasSize(1)))
+		       	.andExpect(jsonPath("$.validationErrors[*].field", contains("id")));
+	}
+
+	@Test
+	public void UpdateReturnsBadRequestWhenUnexpectedAttributeProvided() throws Exception {
+		String body = "{ \"tacos\":\"value\" }}";
+		mockMvc.perform(put("/hello/").content(body)
+				.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnprocessableEntity())
+				.andExpect(jsonPath("$.validationErrors", hasSize(1)))
+			    .andExpect(jsonPath("$.validationErrors[*].field", contains("id")));
+	}
+
+	@Test
+	public void UpdateReturnsBadRequestWhenMissMatchingIdProvided() throws Exception {
+		UUID randomId = UUID.randomUUID();
+		Greeting updateMsg = new Greeting(HELLO_LUKE);
+		updateMsg.setId(randomId.toString());
 		
-		mockMvc.perform(put("/hello").contentType(MediaType.APPLICATION_JSON)
-                .content(body))
+		String body = getGreetingBody(updateMsg);
+
+		mockMvc.perform(put("/hello/")
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message", containsString(GREETING_NOT_FOUND)));
+
 	}
 
 	private String getGreetingBody(Greeting greeting) throws JSONException {

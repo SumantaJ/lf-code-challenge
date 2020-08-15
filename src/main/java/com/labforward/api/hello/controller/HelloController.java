@@ -15,7 +15,11 @@ import com.labforward.api.core.exception.ResourceNotFoundException;
 import com.labforward.api.hello.domain.Greeting;
 import com.labforward.api.hello.service.HelloWorldService;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 @RestController
+@Api(value = "Greetings Controller")
 public class HelloController {
 
 	private HelloWorldService helloWorldService;
@@ -26,24 +30,28 @@ public class HelloController {
 
 	@GetMapping(value = "/hello")
 	@ResponseBody
+	@ApiOperation(value = "fetches the default greeting.", response = Greeting.class)
 	public Greeting helloWorld() {
 		return getGreeting(DEFAULT_ID);
 	}
 
 	@GetMapping(value = "/hello/{id}")
 	@ResponseBody
+	@ApiOperation(value = "fetches a greeting with a given id.", response = Greeting.class)
 	public Greeting getGreeting(@PathVariable String id) {
 		return helloWorldService.getGreeting(id).orElseThrow(() -> new ResourceNotFoundException(GREETING_NOT_FOUND));
 	}
 
 	@PostMapping(value = "/hello")
 	@ResponseBody
+	@ApiOperation(value = "Creates a greeting with a given message.", response = Greeting.class)
 	public Greeting createGreeting(@RequestBody Greeting request) {
 		return helloWorldService.createGreeting(request);
 	}
 
 	@PutMapping(value = "/hello")
 	@ResponseBody
+	@ApiOperation(value = "Updates an existing greeting with a given id and message.", response = Greeting.class)
 	public Greeting updateGreeting(@RequestBody Greeting request) {
 		return helloWorldService.updateGreeting(request)
 				.orElseThrow(() -> new ResourceNotFoundException(GREETING_NOT_FOUND));

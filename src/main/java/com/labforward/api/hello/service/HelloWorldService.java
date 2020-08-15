@@ -42,7 +42,7 @@ public class HelloWorldService {
 	 * @return Optional with new greeting if the creation was successful or empty otherwise
 	 */
 	public Greeting createGreeting(Greeting request) {
-		entityValidator.validateCreate(request);
+		entityValidator.validateUpdate(request);
 
 		request.setId(UUID.randomUUID().toString());
 		return save(request);
@@ -55,6 +55,7 @@ public class HelloWorldService {
 	 * @return Optional with the found Greeting or empty otherwise
 	 */
 	public Optional<Greeting> getGreeting(String id) {
+		entityValidator.validateId(id, Greeting.class);
 		Greeting greeting = greetings.get(id);
 
 		return (greeting == null) ? Optional.empty() : Optional.of(greeting);

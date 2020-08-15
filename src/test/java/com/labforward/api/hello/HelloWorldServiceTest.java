@@ -15,12 +15,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class HelloWorldServiceTest {
 	
 	private static final String HELLO_LUKE = "Hello Luke";
+	private static final String EMPTY_MESSAGE = "";
+	private static final String EMPTY_ID = "";
 
 	@Autowired
 	private HelloWorldService helloService;
@@ -29,21 +32,49 @@ public class HelloWorldServiceTest {
 	@Test
 	public void getDefaultGreetingIsOK() {
 		Optional<Greeting> greeting = helloService.getDefaultGreeting();
+		
 		Assert.assertTrue(greeting.isPresent());
 		Assert.assertEquals(DEFAULT_ID, greeting.get().getId());
 		Assert.assertEquals(DEFAULT_MESSAGE, greeting.get().getMessage());
 	}
 	
 	@Test
-	public void getGreetingsWithNullReturnsEmpty() {
+	public void getGreetingOKWhenValidRequest() {
+		Greeting request = new Greeting(HELLO_LUKE);
+
+		Greeting created = helloService.createGreeting(request);
+		Optional<Greeting> retreived = helloService.getGreeting(created.getId());
+
+		Assert.assertEquals(created.getId(), retreived.get().getId());
+		Assert.assertEquals(created.getMessage(), retreived.get().getMessage());
+	}
+	
+	@Test
+	public void getGreetingReturnEmptyWhenIdNotPresent() {
+		Optional<Greeting> retreived = helloService.getGreeting(UUID.randomUUID().toString());
+
+		Assert.assertFalse(retreived.isPresent());
+	}
+	
+	@Test(expected = EntityValidationException.class)
+	public void getGreetingsWithInvalidIdThrowsException() {
 		final String invalidId = "InvalidID";
-		Optional<Greeting> greeting = helloService.getGreeting(invalidId);
-		Assert.assertFalse(greeting.isPresent());
+		helloService.getGreeting(invalidId);
+	}
+	
+	@Test(expected = EntityValidationException.class)
+	public void getGreetingWithEmptyIDThrowsException(){
+		helloService.getGreeting("");
 	}
 
 	@Test(expected = EntityValidationException.class)
+	public void getGreetingWithNullIDThrowsException() {
+		helloService.getGreeting(null);
+	}
+
+
+	@Test(expected = EntityValidationException.class)
 	public void createGreetingWithEmptyMessageThrowsException() {
-		final String EMPTY_MESSAGE = "";
 		helloService.createGreeting(new Greeting(EMPTY_MESSAGE));
 	}
 
@@ -76,13 +107,49 @@ public class HelloWorldServiceTest {
 	}
 	
 	@Test
-	public void updateGreetingReturnsEmptyWhenIdInvalid() {
-		Greeting request = new Greeting(HELLO_LUKE);
-		request.setId("InvalidId");
-		Optional<Greeting> updated = helloService.updateGreeting(request);
+	public void updateGreetingReturnEmptyWhenIdNotFound() {
+		Greeting greeting = new Greeting(UUID.randomUUID().toString(), HELLO_LUKE);
 		
-		Assert.assertFalse(updated.isPresent());
+		Optional<Greeting> retreived = helloService.updateGreeting(greeting);
+		
+		Assert.assertFalse(retreived.isPresent());
 	}
+	
+	@Test(expected = EntityValidationException.class)
+	public void updateGreetingThrowsExceptionWhenIdInvalid() {
+		Greeting request = new Greeting("InvalidId", HELLO_LUKE);
+		
+		helloService.updateGreeting(request);
+	}
+	
+	@Test(expected = EntityValidationException.class)
+	public void updateGreetingThrowsExceptionWhenEmptyId() {
+		Greeting greeting = new Greeting(EMPTY_ID, EMPTY_MESSAGE);
+		
+		helloService.updateGreeting(greeting);
+	}
+
+	@Test(expected = EntityValidationException.class)
+	public void updateGreetingThrowsExceptionWhenIdNull() {
+		Greeting greeting = new Greeting(null,EMPTY_MESSAGE);
+		
+		helloService.updateGreeting(greeting);
+	}
+
+	@Test(expected = EntityValidationException.class)
+	public void updateGreetingThrowsExceptionWhenEmptyMessage() {
+		Greeting greeting = new Greeting(UUID.randomUUID().toString(), EMPTY_MESSAGE);
+		
+		helloService.updateGreeting(greeting);
+	}
+
+	@Test(expected = EntityValidationException.class)
+	public void updateGreetingThrowsExceptionWhenMessageNull() {
+		Greeting greeting = new Greeting(UUID.randomUUID().toString(), null);
+		
+		helloService.updateGreeting(greeting);
+	}
+
 	
 	private Greeting createGreeting(Greeting greeting) {
 		return helloService.createGreeting(greeting);

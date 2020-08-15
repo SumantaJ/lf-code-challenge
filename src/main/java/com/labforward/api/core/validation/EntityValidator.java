@@ -1,26 +1,25 @@
 package com.labforward.api.core.validation;
 
 import static com.labforward.api.constants.Constants.MESSAGE_NO_ID_MATCH;
+import static com.labforward.api.constants.Constants.MESSAGE_INVALID_ID;
 
-import com.google.common.base.Preconditions;
-import com.labforward.api.core.exception.EntityValidationException;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
+
+import com.google.common.base.Preconditions;
+import com.labforward.api.core.exception.EntityValidationException;
 
 public class EntityValidator {
 
 	private SpringValidatorAdapter validatorAdapter;
 
 	@Autowired
-	public EntityValidator(@Qualifier("springValidatorAdapter") SpringValidatorAdapter validatorAdapter){
+	public EntityValidator(SpringValidatorAdapter validatorAdapter){
 		this.validatorAdapter = validatorAdapter;
-	}
-
-	public void validateCreate(Object target, Object... groups) throws EntityValidationException {
-		validate(target, groups);
 	}
 
 	public void validateUpdate(Object target, Object... groups) throws EntityValidationException {
@@ -28,7 +27,7 @@ public class EntityValidator {
 	}
 
 	public void validateUpdate(String id, Entity target) throws EntityValidationException {
-		Preconditions.checkArgument(id != null);
+		validateId(id, target.getClass());
 		Preconditions.checkArgument(target != null);
 
 		BeanPropertyBindingResult result = new BeanPropertyBindingResult(target, target.getClass().getName());
@@ -47,6 +46,21 @@ public class EntityValidator {
 		}
 	}
 
+	public void validateId(String id, Class<?> target) throws EntityValidationException {
+		BeanPropertyBindingResult result = new BeanPropertyBindingResult(target, target.getClass().getName());
+		try {
+			Preconditions.checkArgument(id != null);
+			Preconditions.checkArgument(!id.trim().isEmpty());
+			if (!id.equals("default")) {
+				UUID.fromString(id);
+			}
+		}catch(IllegalArgumentException e) {
+			FieldError fieldError = new FieldError(target.getClass().getName(), "id", MESSAGE_INVALID_ID);
+			result.addError(fieldError);
+			throw new EntityValidationException(result);
+		}
+	}
+		
 	protected void validate(Object target, Object... groups) throws EntityValidationException {
 		Preconditions.checkArgument(target != null);
 

@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.ListIterator;
 
 public class BeanValidationUtils {
+	private BeanValidationUtils() {
+		//Private constructor to hide the public one
+	}
 
 	public static final String OBJECT_ERROR_DELIMITER = "#";
 

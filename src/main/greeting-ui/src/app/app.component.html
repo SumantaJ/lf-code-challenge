@@ -1,0 +1,35 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 mt-4">
+      <h1 class="text-center">{{greeting.message}}</h1>
+      <div class="form">
+      <button *ngIf="!(greetingForm || editGreetingForm)" class="btn btn-success" (click)="showForm()">Want to greet in your own words?</button>
+
+      <div class="mt-4">
+        <form *ngIf="greetingForm">
+          <h2>Add Message</h2>
+          <p> <input type="hidden" name="id" value="" [(ngModel)]="newGreeting.id" /></p>
+          <p>Message: <input type="text" name="message" [(ngModel)]="newGreeting.message" /></p>
+          <p>
+            <button type="button" class="btn btn-primary mr-2" (click)="save(newGreeting)">Submit</button>
+            <button type="button" class="btn btn-warning" (click)="cancelSave()">Cancel</button>
+          </p>
+        </form>
+
+        <form *ngIf="editGreetingForm">
+          <h2>Edit Message</h2>
+          <p> <input type="hidden" name="id" [(ngModel)]="editGreeting.id" /></p>
+          <p>Message: <input type="text" name="message" [(ngModel)]="editGreeting.message" /></p>
+          <p>
+            <button type="button" class="btn btn-primary mr-2" (click)="update()">Submit</button>
+            <button type="button" class="btn btn-warning" (click)="cancelEdits()">Cancel</button>
+          </p>
+        </form>
+        <button *ngIf="!((greeting.id == 'default' && 'null') || (greetingForm || editGreetingForm))" type="button" class="btn btn-info btn-sm mr-2" (click)="showEditForm(greeting)">Want to edit ?</button>
+        <button *ngIf="!(greeting.id == 'default')" type="button" class="btn btn-info btn-sm mr-2" (click)="reloadDefault()">Reload Default Greeting</button>
+      </div>
+    </div>
+    <div class="text-center error" *ngIf="error.length != 0">{{error}}</div>
+    </div>
+  </div>
+</div>
