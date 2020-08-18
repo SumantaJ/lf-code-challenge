@@ -61,7 +61,7 @@ Please note, both main project code and deployable app is there to check, inside
 
     > npm install -g @angular/cli
 
-1. Run spring boot application by running **./gradlew bootRun** from root project folder.
+1. Run spring boot application by running **./gradlew bootRun** from root project folder .
 
 2. Once spring boot application is up and running, please go to (project root)/src/main/greeting-ui:
 
