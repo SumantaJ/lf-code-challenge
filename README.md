@@ -41,7 +41,6 @@ Good Luck!
 - Added basic spring actuator functionality to check application health. [click to explore](http://localhost:8080/actuator/health)
 - Added Swagger for endpoint documentation. [click to explore](http://localhost:8080/swagger-ui.html#/)
 - Added Angular Based interactive UI using exposed endpoints
-- Updated Gradle Script to integrate angular project install and build step along with spring boot app run. 
 
 ## UI Design
 
@@ -62,7 +61,7 @@ Please note, both main project code and deployable app is there to check, inside
 
     > npm install -g @angular/cli
 
-1. Run spring boot application by running **./gradlew bootRun** from root project folder. Please note this will also internally run two command **npm install** and **ng build** to fetch all dependencies and build angular UI app.
+1. Run spring boot application by running **./gradlew bootRun** from root project folder.
 
 2. Once spring boot application is up and running, please go to (project root)/src/main/greeting-ui:
 
